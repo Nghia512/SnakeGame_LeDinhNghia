@@ -47,13 +47,11 @@ font_small = pygame.font.SysFont("Segoe UI", 12, bold=False)
 
 # Cài đặt Game
 settings = {
-    "brightness": 1.0, # 0.5 đến 1.5
-    "volume": 1.0,     # 0.0 đến 1.0
+    "brightness": 1.0,
     "bg_idx": 0,
     "snake_idx": 0,
     "level": 0
 }
-
 
 # II. ĐỊA HÌNH VÀ CẤP ĐỘ (LEVELS)
 def generate_obstacles(level_idx):
@@ -294,7 +292,7 @@ def draw_top_hud_bar(surface, score, high_score, fps, ai_detected):
     )
     surface.blit(
         font_small.render(
-            "CONTROLS: [Arrows] Move | [P] Pause | [R] Reboot",
+            "CONTROLS: [Arrows] Move | [P] Pause | [R] Retry | [ESC] Menu",
             True,
             COLOR_SUBTEXT
         ),
@@ -346,7 +344,8 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 clicked = True
             elif event.type == pygame.KEYDOWN:
-                if game_state == "PLAYING":
+                if event.key == pygame.K_ESCAPE: game_state = "MENU"
+                elif game_state == "PLAYING":
                     if event.key == pygame.K_UP: snake.change_direction("UP")
                     elif event.key == pygame.K_DOWN: snake.change_direction("DOWN")
                     elif event.key == pygame.K_LEFT: snake.change_direction("LEFT")
@@ -379,6 +378,7 @@ def main():
                     obstacles = generate_obstacles(settings["level"])
                     food.randomize_position(obstacles, snake.body)
                     score = 0
+                    current_fps = BASE_FPS
                     game_state = "PLAYING"
                 elif btn_lvl.collidepoint(mouse_pos): game_state = "LEVELS"
                 elif btn_opt.collidepoint(mouse_pos): game_state = "OPTIONS"
@@ -422,19 +422,13 @@ def main():
             screen.blit(font_bold.render(f"BRIGHTNESS: {int(settings['brightness']*100)}%", True, COLOR_TEXT), (210, 170))
             btn_b_up, _ = draw_button(screen, "+", 450, 160, 40, 40, mouse_pos)
 
-            btn_v_down, _ = draw_button(screen, "-", 150, 220, 40, 40, mouse_pos)
-            screen.blit(font_bold.render(f"VOLUME: {int(settings['volume']*100)}%", True, COLOR_TEXT), (210, 230))
-            btn_v_up, _ = draw_button(screen, "+", 450, 220, 40, 40, mouse_pos)
-
-            btn_s_color, _ = draw_button(screen, f"SNAKE COLOR: {settings['snake_idx']+1}", WIDTH//2 - 120, 280, 240, 40, mouse_pos)
-            btn_bg_color, _ = draw_button(screen, f"BACKGROUND: {settings['bg_idx']+1}", WIDTH//2 - 120, 340, 240, 40, mouse_pos)
-            btn_back, _ = draw_button(screen, "BACK", WIDTH//2 - 100, 410, 200, 45, mouse_pos)
+            btn_s_color, _ = draw_button(screen, f"SNAKE COLOR: {settings['snake_idx']+1}", WIDTH//2 - 120, 220, 240, 40, mouse_pos)
+            btn_bg_color, _ = draw_button(screen, f"BACKGROUND: {settings['bg_idx']+1}", WIDTH//2 - 120, 280, 240, 40, mouse_pos)
+            btn_back, _ = draw_button(screen, "BACK", WIDTH//2 - 100, 360, 200, 45, mouse_pos)
 
             if clicked:
                 if btn_b_down.collidepoint(mouse_pos): settings["brightness"] = max(0.5, settings["brightness"] - 0.1)
                 elif btn_b_up.collidepoint(mouse_pos): settings["brightness"] = min(1.5, settings["brightness"] + 0.1)
-                elif btn_v_down.collidepoint(mouse_pos): settings["volume"] = max(0.0, settings["volume"] - 0.1)
-                elif btn_v_up.collidepoint(mouse_pos): settings["volume"] = min(1.0, settings["volume"] + 0.1)
                 elif btn_s_color.collidepoint(mouse_pos): settings["snake_idx"] = (settings["snake_idx"] + 1) % len(SNAKE_THEMES)
                 elif btn_bg_color.collidepoint(mouse_pos): settings["bg_idx"] = (settings["bg_idx"] + 1) % len(BG_THEMES)
                 elif btn_back.collidepoint(mouse_pos): game_state = "MENU"
@@ -505,8 +499,10 @@ def main():
             if clicked:
                 if btn_retry.collidepoint(mouse_pos):
                     snake.reset()
+                    obstacles = generate_obstacles(settings["level"])
                     food.randomize_position(obstacles, snake.body)
                     score = 0
+                    current_fps = BASE_FPS
                     game_state = "PLAYING"
                 elif btn_menu.collidepoint(mouse_pos): game_state = "MENU"
                 elif btn_quit.collidepoint(mouse_pos): running = False
